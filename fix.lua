@@ -144,34 +144,9 @@ local refDisabled = {
 
 ui.set_visible(refDisabled[1].reference, false);
 
-local refLoadedLUAs = {
-    {
-        name = "Luminus Lights",
-        ref("Visuals", "Other ESP", "Visualize lights"),
-        ref("Visuals", "Effects", "Luminus lights"),
-        ref("Visuals", "Effects", "Flashlight"),
-    },
-};
-
 local glowEnabled = ui.new_checkbox("Visuals", "Player ESP", "Glow");
 local glowColor = ui.new_color_picker("Visuals", "Player ESP", "Glow", 255, 0, 255, 150);
 local glowOnTeam = ui.reference("Visuals", "Player ESP", "Teammates");
-
-for i = 1, #refLoadedLUAs do
-    local isLoaded = false;
-
-    if (refLoadedLUAs[i] ~= nil and #refLoadedLUAs[i] > 1) then
-        for f = 1, #refLoadedLUAs[i] - 1 do
-            if (refLoadedLUAs[i][f + 1] ~= nil) then
-                isLoaded = true;
-            end
-        end
-    end
-
-    if (isLoaded) then
-        client.error_log("You currently have a LUA causing crashing, please unload: " .. refLoadedLUAs[i].name .. ".")
-    end
-end
 
 local function colorCallback()
     if (glowObjectIndexes ~= nil and type(glowObjectIndexes) == "table" and #glowObjectIndexes > 0) then
@@ -236,16 +211,6 @@ local function runPaint()
     if (not ui.get(disableFix)) then
         for i = 1, #refDisabled do
             refDisabled[i]:set(false);
-        end
-    end
-
-    for i = 1, #refLoadedLUAs do
-        if (refLoadedLUAs[i] ~= nil and #refLoadedLUAs[i] > 1) then
-            for f = 1, #refLoadedLUAs[i] - 1 do
-                if (refLoadedLUAs[i][f] ~= nil) then
-                    refLoadedLUAs[i][f]:set(false);
-                end
-            end
         end
     end
 
