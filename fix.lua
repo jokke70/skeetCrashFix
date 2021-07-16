@@ -124,15 +124,22 @@ local disableFix = ui.new_checkbox("LUA", "A", "Disable Crash Fix");
 
 function ref(tab, groupbox, title)
     local a, b, c = type(tab), type(groupbox), type(title);
+    local reference, state = nil, nil;
+
     if (a == "string" or b == "string" or c == "string") then
-        local reference = ui.reference(tab, groupbox, title);
-        if (reference == nil) then return nil; end
-        return setmetatable({reference = reference, state = ui.get(reference) }, references);
+        if (pcall(function() ui.reference(tab, groupbox, title); end)) then
+            reference = ui.reference(tab, groupbox, title);
+            state = ui.get(reference);
+        else
+            return nil;
+        end
     end
+
+    return setmetatable({reference = reference, state = state}, references);
 end
 
 function references:set(value)
-    if (type(ui.get(self.reference)) == type(value)) then
+    if (self.reference ~= nil and type(ui.get(self.reference)) == type(value)) then
         ui.set(self.reference, value);
     end
 end
@@ -142,11 +149,40 @@ local refDisabled = {
     ref("Visuals", "Other ESP", "Grenades"),
 };
 
-ui.set_visible(refDisabled[1].reference, false);
+local refLoadedLUAs = {
+    {
+        name = "Luminus Lights",
+        ref("Visuals", "Other ESP", "Visualize lights"),
+        ref("Visuals", "Effects", "Luminus lights"),
+        ref("Visuals", "Effects", "Flashlight"),
+    },
+};
 
 local glowEnabled = ui.new_checkbox("Visuals", "Player ESP", "Glow");
 local glowColor = ui.new_color_picker("Visuals", "Player ESP", "Glow", 255, 0, 255, 150);
 local glowOnTeam = ui.reference("Visuals", "Player ESP", "Teammates");
+
+for i = 1, #refDisabled do
+    if (refDisabled[i].reference ~= nil) then
+        ui.set_visible(refDisabled[i].reference, false);
+    end
+end
+
+for i = 1, #refLoadedLUAs do
+    local isLoaded = false;
+
+    if (refLoadedLUAs[i] ~= nil and #refLoadedLUAs[i] > 1) then
+        for f = 1, #refLoadedLUAs[i] - 1 do
+            if (refLoadedLUAs[i][f + 1] ~= nil) then
+                isLoaded = true;
+            end
+        end
+    end
+
+    if (isLoaded) then
+        client.error_log("You currently have a LUA causing crashing, please unload: " .. refLoadedLUAs[i].name .. ".")
+    end
+end
 
 local function colorCallback()
     if (glowObjectIndexes ~= nil and type(glowObjectIndexes) == "table" and #glowObjectIndexes > 0) then
@@ -211,6 +247,16 @@ local function runPaint()
     if (not ui.get(disableFix)) then
         for i = 1, #refDisabled do
             refDisabled[i]:set(false);
+        end
+    end
+
+    for i = 1, #refLoadedLUAs do
+        if (refLoadedLUAs[i] ~= nil and #refLoadedLUAs[i] > 1) then
+            for f = 1, #refLoadedLUAs[i] - 1 do
+                if (refLoadedLUAs[i][f] ~= nil) then
+                    refLoadedLUAs[i][f]:set(false);
+                end
+            end
         end
     end
 
